@@ -52,7 +52,7 @@ local function attackTarget()
                     damageRemote:FireServer(Target) 
                     tool.Parent = LocalPlayer.Backpack 
 
-                    task.wait(0.4+0.25)
+                    task.wait(0.4)
                     isCooldown = false
                 end
                 task.wait() 
