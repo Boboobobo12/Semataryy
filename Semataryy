@@ -274,148 +274,99 @@ OpenButton.TextSize = 12
 OpenButton.Visible = false
 OpenButton.Parent = ScreenGui
 
--- Variables para la lista de jugadores
+-- Crear lista de jugadores
 local PlayerListFrame
-local PlayerListScrollFrame
-local PlayerListConnections = {}
-
--- Función para crear un botón de jugador
-local function createPlayerButton(player, parent)
-    local playerInfo = getPlayerInfo(player)
+local function createPlayerList()
+    if PlayerListFrame then PlayerListFrame:Destroy() end
     
-    local PlayerButton = Instance.new("TextButton")
-    PlayerButton.Size = UDim2.new(1, -10, 0, 40)
-    PlayerButton.Position = UDim2.new(0, 5, 0, 0)
-    PlayerButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    PlayerButton.BackgroundTransparency = 0.5
-    PlayerButton.Text = ""
-    PlayerButton.AutoButtonColor = false
-    PlayerButton.Parent = parent
+    PlayerListFrame = Instance.new("Frame")
+    PlayerListFrame.Size = UDim2.new(0.8, 0, 0.6, 0)
+    PlayerListFrame.Position = UDim2.new(0.1, 0, 0.3, 0)
+    PlayerListFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    PlayerListFrame.BackgroundTransparency = 0.2
+    PlayerListFrame.BorderSizePixel = 0
+    PlayerListFrame.Visible = false
+    PlayerListFrame.Parent = ContentContainer
     
-    local NameLabel = Instance.new("TextLabel")
-    NameLabel.Size = UDim2.new(0.6, 0, 0.5, 0)
-    NameLabel.Position = UDim2.new(0, 5, 0, 0)
-    NameLabel.BackgroundTransparency = 1
-    NameLabel.Text = playerInfo.Username
-    NameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    NameLabel.TextXAlignment = Enum.TextXAlignment.Left
-    NameLabel.Font = Enum.Font.Gotham
-    NameLabel.TextSize = 12
-    NameLabel.Parent = PlayerButton
+    local ScrollFrame = Instance.new("ScrollingFrame")
+    ScrollFrame.Size = UDim2.new(1, 0, 1, 0)
+    ScrollFrame.Position = UDim2.new(0, 0, 0, 0)
+    ScrollFrame.BackgroundTransparency = 1
+    ScrollFrame.BorderSizePixel = 0
+    ScrollFrame.ScrollBarThickness = 5
+    ScrollFrame.Parent = PlayerListFrame
     
-    local DisplayLabel = Instance.new("TextLabel")
-    DisplayLabel.Size = UDim2.new(0.6, 0, 0.5, 0)
-    DisplayLabel.Position = UDim2.new(0, 5, 0.5, 0)
-    DisplayLabel.BackgroundTransparency = 1
-    DisplayLabel.Text = playerInfo.DisplayName .. " (" .. playerInfo.Skin .. ")"
-    DisplayLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-    DisplayLabel.TextXAlignment = Enum.TextXAlignment.Left
-    DisplayLabel.Font = Enum.Font.Gotham
-    DisplayLabel.TextSize = 10
-    DisplayLabel.Parent = PlayerButton
+    local UIListLayout = Instance.new("UIListLayout")
+    UIListLayout.Padding = UDim.new(0, 5)
+    UIListLayout.Parent = ScrollFrame
     
-    local SelectButton = Instance.new("TextButton")
-    SelectButton.Size = UDim2.new(0.3, 0, 0.8, 0)
-    SelectButton.Position = UDim2.new(0.7, 0, 0.1, 0)
-    SelectButton.BackgroundColor3 = Color3.fromRGB(120, 0, 0)
-    SelectButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    SelectButton.Text = "Seleccionar"
-    SelectButton.Font = Enum.Font.Gotham
-    SelectButton.TextSize = 12
-    SelectButton.Parent = PlayerButton
-    
-    SelectButton.MouseButton1Click:Connect(function()
-        targetUsername = player.Name
-        TargetLabel.Text = "Objetivo: " .. playerInfo.DisplayName
-        PlayerListFrame.Visible = false
-    end)
-    
-    return PlayerButton
-end
-
--- Función para actualizar la lista de jugadores
-local function updatePlayerList()
-    -- Limpiar conexiones anteriores
-    for _, connection in pairs(PlayerListConnections) do
-        connection:Disconnect()
-    end
-    PlayerListConnections = {}
-    
-    -- Limpiar lista existente
-    if PlayerListScrollFrame then
-        PlayerListScrollFrame:ClearAllChildren()
-    else
-        -- Crear el marco de la lista de jugadores si no existe
-        PlayerListFrame = Instance.new("Frame")
-        PlayerListFrame.Size = UDim2.new(0.8, 0, 0.6, 0)
-        PlayerListFrame.Position = UDim2.new(0.1, 0, 0.3, 0)
-        PlayerListFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-        PlayerListFrame.BackgroundTransparency = 0.2
-        PlayerListFrame.BorderSizePixel = 0
-        PlayerListFrame.Visible = false
-        PlayerListFrame.Parent = ContentContainer
-        
-        PlayerListScrollFrame = Instance.new("ScrollingFrame")
-        PlayerListScrollFrame.Size = UDim2.new(1, 0, 1, 0)
-        PlayerListScrollFrame.Position = UDim2.new(0, 0, 0, 0)
-        PlayerListScrollFrame.BackgroundTransparency = 1
-        PlayerListScrollFrame.BorderSizePixel = 0
-        PlayerListScrollFrame.ScrollBarThickness = 5
-        PlayerListScrollFrame.Parent = PlayerListFrame
-        
-        local UIListLayout = Instance.new("UIListLayout")
-        UIListLayout.Padding = UDim.new(0, 5)
-        UIListLayout.Parent = PlayerListScrollFrame
-        
-        -- Actualizar tamaño del scroll cuando cambia el layout
-        UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-            PlayerListScrollFrame.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y)
-        end)
-    end
-    
-    -- Obtener y ordenar lista de jugadores
+    -- Obtener lista de jugadores
     local players = Players:GetPlayers()
     table.sort(players, function(a, b) return a.Name:lower() < b.Name:lower() end)
     
-    -- Agregar jugadores a la lista
+    -- Crear botones para cada jugador
     for _, player in ipairs(players) do
         if player ~= LocalPlayer then
-            createPlayerButton(player, PlayerListScrollFrame)
+            local playerInfo = getPlayerInfo(player)
+            
+            local PlayerButton = Instance.new("TextButton")
+            PlayerButton.Size = UDim2.new(1, -10, 0, 40)
+            PlayerButton.Position = UDim2.new(0, 5, 0, 0)
+            PlayerButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+            PlayerButton.BackgroundTransparency = 0.5
+            PlayerButton.Text = ""
+            PlayerButton.AutoButtonColor = false
+            PlayerButton.Parent = ScrollFrame
+            
+            local NameLabel = Instance.new("TextLabel")
+            NameLabel.Size = UDim2.new(0.6, 0, 0.5, 0)
+            NameLabel.Position = UDim2.new(0, 5, 0, 0)
+            NameLabel.BackgroundTransparency = 1
+            NameLabel.Text = playerInfo.Username
+            NameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            NameLabel.TextXAlignment = Enum.TextXAlignment.Left
+            NameLabel.Font = Enum.Font.Gotham
+            NameLabel.TextSize = 12
+            NameLabel.Parent = PlayerButton
+            
+            local DisplayLabel = Instance.new("TextLabel")
+            DisplayLabel.Size = UDim2.new(0.6, 0, 0.5, 0)
+            DisplayLabel.Position = UDim2.new(0, 5, 0.5, 0)
+            DisplayLabel.BackgroundTransparency = 1
+            DisplayLabel.Text = playerInfo.DisplayName .. " (" .. playerInfo.Skin .. ")"
+            DisplayLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+            DisplayLabel.TextXAlignment = Enum.TextXAlignment.Left
+            DisplayLabel.Font = Enum.Font.Gotham
+            DisplayLabel.TextSize = 10
+            DisplayLabel.Parent = PlayerButton
+            
+            local SelectButton = Instance.new("TextButton")
+            SelectButton.Size = UDim2.new(0.3, 0, 0.8, 0)
+            SelectButton.Position = UDim2.new(0.7, 0, 0.1, 0)
+            SelectButton.BackgroundColor3 = Color3.fromRGB(120, 0, 0)
+            SelectButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            SelectButton.Text = "Seleccionar"
+            SelectButton.Font = Enum.Font.Gotham
+            SelectButton.TextSize = 12
+            SelectButton.Parent = PlayerButton
+            
+            SelectButton.MouseButton1Click:Connect(function()
+                targetUsername = player.Name
+                TargetLabel.Text = "Objetivo: " .. playerInfo.DisplayName
+                PlayerListFrame.Visible = false
+            end)
         end
     end
     
-    -- Escuchar nuevos jugadores que se unan
-    table.insert(PlayerListConnections, Players.PlayerAdded:Connect(function(player)
-        task.wait() -- Esperar un frame para asegurar que el jugador esté completamente cargado
-        if PlayerListScrollFrame and PlayerListFrame.Visible then
-            createPlayerButton(player, PlayerListScrollFrame)
-        end
-    end))
-    
-    -- Escuchar jugadores que abandonen
-    table.insert(PlayerListConnections, Players.PlayerRemoving:Connect(function(player)
-        if PlayerListScrollFrame and PlayerListFrame.Visible then
-            for _, child in ipairs(PlayerListScrollFrame:GetChildren()) do
-                if child:IsA("TextButton") then
-                    local nameLabel = child:FindFirstChildOfClass("TextLabel")
-                    if nameLabel and nameLabel.Text == player.Name then
-                        child:Destroy()
-                        break
-                    end
-                end
-            end
-        end
-    end))
+    -- Ajustar tamaño del scroll
+    local totalHeight = #players * 45 + (#players - 1) * 5
+    ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, totalHeight)
 end
 
 -- Mostrar/ocultar lista de jugadores
 SelectTargetButton.MouseButton1Click:Connect(function()
-    if PlayerListFrame and PlayerListFrame.Visible then
-        PlayerListFrame.Visible = false
-    else
-        updatePlayerList()
-        PlayerListFrame.Visible = true
-    end
+    createPlayerList()
+    PlayerListFrame.Visible = not PlayerListFrame.Visible
 end)
 
 -- Funcionalidad del botón LOOP
