@@ -8,6 +8,7 @@ local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local isCooldown = false
 local isLooping = false
 local targetUsername = ""
+local targetPlayer = nil
 local guiVisible = true
 
 -- Configuración del LED rojo oscuro
@@ -24,7 +25,15 @@ local LEDConfig = {
 local function getPlayerInfo(player)
     local character = player.Character
     local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-    local skin = humanoid and humanoid.DisplayName ~= humanoid.Name and humanoid.DisplayName or "Default"
+    local skin = "Default"
+    
+    if humanoid then
+        if humanoid:FindFirstChild("creator") then
+            skin = humanoid.creator.Value.Name
+        elseif humanoid.DisplayName ~= humanoid.Name then
+            skin = humanoid.DisplayName
+        end
+    end
     
     return {
         Username = player.Name,
@@ -36,7 +45,10 @@ end
 
 -- Función principal de ataque
 local function attackTarget()
-    local targetPlayer = Players:FindFirstChild(targetUsername)
+    if not targetUsername or targetUsername == "" then return end
+    
+    -- Buscar al jugador objetivo nuevamente por si ha cambiado
+    targetPlayer = Players:FindFirstChild(targetUsername)
     
     if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Humanoid") then
         local Target = targetPlayer.Character.Humanoid
@@ -52,11 +64,11 @@ local function attackTarget()
                     damageRemote:FireServer(Target) 
                     tool.Parent = LocalPlayer.Backpack 
 
-                    task.wait(0.5)
+                    task.wait(0.4 + 0.75) -- Velocidad de loop modificada
                     isCooldown = false
                 end
-                task.wait() 
-            until not Target or Target.Health <= 0 or not isLooping
+                task.wait(0.4) 
+            until not Target or Target.Health <= 0 or not isLooping or not targetPlayer or not targetPlayer.Parent
 
             if Target and Target.Health <= 0 then
                 StarterGui:SetCore("SendNotification", {
@@ -182,7 +194,7 @@ Title.Size = UDim2.new(0.7, 0, 1, 0)
 Title.Position = UDim2.new(0.15, 0, 0, 0)
 Title.BackgroundTransparency = 1
 Title.TextColor3 = Color3.fromRGB(255, 50, 50)
-Title.Text = "SEMATARY"
+Title.Text = "AETERNUS"
 Title.Font = Enum.Font.GothamBold
 Title.TextSize = 16
 Title.Parent = TitleBar
@@ -268,7 +280,7 @@ OpenButton.Size = UDim2.new(0, 50, 0, 50)
 OpenButton.Position = UDim2.new(0, 20, 0.5, -25)
 OpenButton.BackgroundColor3 = Color3.fromRGB(120, 0, 0)
 OpenButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-OpenButton.Text = "SEM"
+OpenButton.Text = "Z"
 OpenButton.Font = Enum.Font.GothamBold
 OpenButton.TextSize = 12
 OpenButton.Visible = false
@@ -310,7 +322,7 @@ local function createPlayerList()
             local playerInfo = getPlayerInfo(player)
             
             local PlayerButton = Instance.new("TextButton")
-            PlayerButton.Size = UDim2.new(1, -10, 0, 40)
+            PlayerButton.Size = UDim2.new(1, -10, 0, 60) -- Aumentado para mostrar más info
             PlayerButton.Position = UDim2.new(0, 5, 0, 0)
             PlayerButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
             PlayerButton.BackgroundTransparency = 0.5
@@ -318,48 +330,57 @@ local function createPlayerList()
             PlayerButton.AutoButtonColor = false
             PlayerButton.Parent = ScrollFrame
             
+            local Avatar = Instance.new("ImageLabel")
+            Avatar.Size = UDim2.new(0, 50, 0, 50)
+            Avatar.Position = UDim2.new(0, 5, 0.5, -25)
+            Avatar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            Avatar.BorderSizePixel = 0
+            Avatar.Image = "https://www.roblox.com/headshot-thumbnail/image?userId="..player.UserId.."&width=420&height=420&format=png"
+            Avatar.Parent = PlayerButton
+            
             local NameLabel = Instance.new("TextLabel")
-            NameLabel.Size = UDim2.new(0.6, 0, 0.5, 0)
-            NameLabel.Position = UDim2.new(0, 5, 0, 0)
+            NameLabel.Size = UDim2.new(0.6, 0, 0.3, 0)
+            NameLabel.Position = UDim2.new(0, 60, 0, 5)
             NameLabel.BackgroundTransparency = 1
-            NameLabel.Text = playerInfo.Username
+            NameLabel.Text = playerInfo.DisplayName .. " (@"..playerInfo.Username..")"
             NameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
             NameLabel.TextXAlignment = Enum.TextXAlignment.Left
-            NameLabel.Font = Enum.Font.Gotham
+            NameLabel.Font = Enum.Font.GothamBold
             NameLabel.TextSize = 12
             NameLabel.Parent = PlayerButton
             
-            local DisplayLabel = Instance.new("TextLabel")
-            DisplayLabel.Size = UDim2.new(0.6, 0, 0.5, 0)
-            DisplayLabel.Position = UDim2.new(0, 5, 0.5, 0)
-            DisplayLabel.BackgroundTransparency = 1
-            DisplayLabel.Text = playerInfo.DisplayName .. " (" .. playerInfo.Skin .. ")"
-            DisplayLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-            DisplayLabel.TextXAlignment = Enum.TextXAlignment.Left
-            DisplayLabel.Font = Enum.Font.Gotham
-            DisplayLabel.TextSize = 10
-            DisplayLabel.Parent = PlayerButton
+            local SkinLabel = Instance.new("TextLabel")
+            SkinLabel.Size = UDim2.new(0.6, 0, 0.3, 0)
+            SkinLabel.Position = UDim2.new(0, 60, 0.3, 5)
+            SkinLabel.BackgroundTransparency = 1
+            SkinLabel.Text = "Skin: " .. playerInfo.Skin
+            SkinLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+            SkinLabel.TextXAlignment = Enum.TextXAlignment.Left
+            SkinLabel.Font = Enum.Font.Gotham
+            SkinLabel.TextSize = 11
+            SkinLabel.Parent = PlayerButton
             
             local SelectButton = Instance.new("TextButton")
-            SelectButton.Size = UDim2.new(0.3, 0, 0.8, 0)
-            SelectButton.Position = UDim2.new(0.7, 0, 0.1, 0)
+            SelectButton.Size = UDim2.new(0.3, 0, 0.6, 0)
+            SelectButton.Position = UDim2.new(0.7, 0, 0.2, 0)
             SelectButton.BackgroundColor3 = Color3.fromRGB(120, 0, 0)
             SelectButton.TextColor3 = Color3.fromRGB(255, 255, 255)
             SelectButton.Text = "Seleccionar"
-            SelectButton.Font = Enum.Font.Gotham
+            SelectButton.Font = Enum.Font.GothamBold
             SelectButton.TextSize = 12
             SelectButton.Parent = PlayerButton
             
             SelectButton.MouseButton1Click:Connect(function()
                 targetUsername = player.Name
-                TargetLabel.Text = "Objetivo: " .. playerInfo.DisplayName
+                targetPlayer = player
+                TargetLabel.Text = "Objetivo: " .. playerInfo.DisplayName .. " ("..playerInfo.Skin..")"
                 PlayerListFrame.Visible = false
             end)
         end
     end
     
     -- Ajustar tamaño del scroll
-    local totalHeight = #players * 45 + (#players - 1) * 5
+    local totalHeight = #players * 65 + (#players - 1) * 5
     ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, totalHeight)
 end
 
@@ -394,15 +415,45 @@ StartButton.MouseButton1Click:Connect(function()
     
     if isLooping then
         task.spawn(function()
-            while isLooping do
+            while isLooping and targetUsername ~= "" do
                 pcall(attackTarget)
-                task.wait(1)
+                task.wait(0.4 + 0.25) -- Velocidad de loop modificada
             end
         end)
     else
         pcall(attackTarget)
     end
 end)
+
+-- Función para manejar cuando un jugador abandona el juego
+local function onPlayerRemoved(player)
+    if player.Name == targetUsername then
+        StarterGui:SetCore("SendNotification", {
+            Title = "OBJETIVO DESCONECTADO",
+            Text = targetUsername .. " ha abandonado el juego.",
+            Duration = 3
+        })
+        
+        -- No limpiamos targetUsername para que si vuelve, siga siendo el objetivo
+        targetPlayer = nil
+    end
+end
+
+-- Función para manejar cuando un jugador entra al juego
+local function onPlayerAdded(player)
+    if player.Name == targetUsername then
+        targetPlayer = player
+        StarterGui:SetCore("SendNotification", {
+            Title = "OBJETIVO RECONECTADO",
+            Text = targetUsername .. " ha vuelto al juego.",
+            Duration = 3
+        })
+    end
+end
+
+-- Conectar eventos de jugadores
+Players.PlayerRemoving:Connect(onPlayerRemoved)
+Players.PlayerAdded:Connect(onPlayerAdded)
 
 -- Funciones para mostrar/ocultar GUI
 local function toggleGUI(visible)
