@@ -65,7 +65,7 @@ local function attackTarget()
                     damageRemote:FireServer(Target) 
                     tool.Parent = LocalPlayer.Backpack 
 
-                    task.wait(0.4 + 0.75) -- Velocidad de loop modificada
+                    task.wait(0.4 + 0.00) -- Velocidad de loop modificada
                     isCooldown = false
                 end
                 task.wait(0.4) 
@@ -418,7 +418,7 @@ StartButton.MouseButton1Click:Connect(function()
         task.spawn(function()
             while isLooping and targetUsername ~= "" do
                 pcall(attackTarget)
-                task.wait(0.4 + 0.25) -- Velocidad de loop modificada
+                task.wait(0.4 + 0.00) -- Velocidad de loop modificada
             end
         end)
     else
